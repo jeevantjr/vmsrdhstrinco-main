@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VMS — Vehicle Management System Dashboard</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'vms-primary': '#10b981', // Emerald Green
+                        'vms-dark': '#064e3b',
+                        'card-running': '#d1fae5', // Light Green
+                        'card-repair': '#fee2e2', // Light Red
+                        'card-total': '#e0f2f1', // Light Teal
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar for table on desktop */
+        ::-webkit-scrollbar {
+            height: 8px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #9ca3af;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans p-4 sm:p-6 lg:p-8">
+
+    <!-- Main Header -->
+    <header class="mb-8">
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-vms-dark border-b-4 border-vms-primary pb-2 flex items-center">
+            <i data-lucide="gauge" class="w-8 h-8 mr-3 text-vms-primary"></i>
+            VMS Fleet Dashboard
+        </h1>
+        <p class="mt-2 text-gray-600 text-lg">Vehicle Master List and Operational Status</p>
+    </header>
+
+    <!-- Key Actions & Links (Simulated Backend Interaction) -->
+    <section class="mb-8 bg-white p-4 sm:p-6 rounded-xl shadow-lg border border-vms-primary/20">
+        <h2 class="text-xl font-semibold text-vms-dark mb-4">Data Management Actions</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Link to Google Form for Expenditure Entry (configure with your own form URL) -->
+            <a id="linkGoogleForm" href="#" onclick="alert('Configure this link with your Google Form URL in vms_dashboard.html'); return false;"
+               class="flex items-center justify-center p-3 bg-red-600 text-white font-bold rounded-lg shadow-md hover:bg-red-700 transition duration-150 transform hover:scale-[1.02]">
+                <i data-lucide="circle-dollar-sign" class="w-5 h-5 mr-2"></i>
+                Log New Expenditure (Google Form)
+            </a>
+            <!-- Link to Google Sheet for Raw Data View (configure with your own sheet URL) -->
+            <a id="linkGoogleSheet" href="#" onclick="alert('Configure this link with your Google Sheet URL in vms_dashboard.html'); return false;"
+               class="flex items-center justify-center p-3 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition duration-150 transform hover:scale-[1.02]">
+                <i data-lucide="database" class="w-5 h-5 mr-2"></i>
+                View Raw Data (Google Sheet)
+            </a>
+            <!-- Link to GitHub Front-end Repo -->
+            <a id="linkGithub" href="https://github.com/jeevantjr/vmsrdhstrinco" target="_blank"
+               class="flex items-center justify-center p-3 bg-gray-700 text-white font-bold rounded-lg shadow-md hover:bg-gray-800 transition duration-150 transform hover:scale-[1.02]">
+                <i data-lucide="github" class="w-5 h-5 mr-2"></i>
+                GitHub Project
+            </a>
+        </div>
+        <p class="text-xs text-gray-500 mt-4 italic" id="data-source-note">Note: Fetching vehicle data live from Google Sheet...</p>
+    </section>
+
+    <!-- Statistics Cards -->
+    <section id="stats-container" class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+        <!-- Default placeholders while loading -->
+        <div class="p-6 rounded-xl shadow-lg bg-gray-100 text-gray-500 border-l-4 border-gray-300 animate-pulse h-28"></div>
+        <div class="p-6 rounded-xl shadow-lg bg-gray-100 text-gray-500 border-l-4 border-gray-300 animate-pulse h-28"></div>
+        <div class="p-6 rounded-xl shadow-lg bg-gray-100 text-gray-500 border-l-4 border-gray-300 animate-pulse h-28"></div>
+    </section>
+
+    <!-- Search and Filter Controls -->
+    <section class="mb-8 bg-white p-4 sm:p-6 rounded-xl shadow-lg border border-gray-200">
+        <h2 class="text-xl font-semibold text-vms-dark mb-4 flex items-center">
+            <i data-lucide="filter" class="w-5 h-5 mr-2 text-vms-primary"></i>
+            Filter & Search
+        </h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <input type="text" id="searchInput" onkeyup="filterVehicles()" placeholder="Search by Vehicle No. or Institution..."
+                    class="p-3 border border-gray-300 rounded-lg focus:ring-vms-primary focus:border-vms-primary transition duration-150">
+
+            <select id="categoryFilter" onchange="filterVehicles()"
+                    class="p-3 border border-gray-300 rounded-lg focus:ring-vms-primary focus:border-vms-primary appearance-none bg-white transition duration-150 cursor-pointer">
+                <option value="">All Categories</option>
+            </select>
+
+            <select id="conditionFilter" onchange="filterVehicles()"
+                    class="p-3 border border-gray-300 rounded-lg focus:ring-vms-primary focus:border-vms-primary appearance-none bg-white transition duration-150 cursor-pointer">
+                <option value="">All Conditions</option>
+                <option value="Running">Running</option>
+                <option value="Needs Repair">Needs Repair</option>
+            </select>
+
+            <button onclick="clearFilters()"
+                    class="flex items-center justify-center p-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition duration-150">
+                <i data-lucide="rotate-ccw" class="w-5 h-5 mr-2"></i>
+                Clear Filters
+            </button>
+        </div>
+    </section>
+
+    <!-- Vehicle Master List Table -->
+    <section class="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div class="p-4 sm:p-6 bg-gray-100 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-vms-dark">Vehicle Master List</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tl-xl">Vehicle No.</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Institution</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Condition</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Brand / Model</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tr-xl">Remarks</th>
+                    </tr>
+                </thead>
+                <tbody id="vehicleTableBody" class="bg-white divide-y divide-gray-200">
+                    <tr><td colspan="6" class="text-center py-8 text-gray-500">
+                        <div id="loadingIndicator" class="flex items-center justify-center">
+                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-vms-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Loading vehicle data from Google Sheet...
+                        </div>
+                    </td></tr>
+                    <!-- Data will be inserted here by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+        <div id="noResults" class="hidden p-8 text-center text-gray-500 italic">No vehicles match the current filters.</div>
+    </section>
+
+    <!-- JavaScript for Data Handling and Interactivity -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize Lucide icons
+            lucide.createIcons();
+            // Load and process data
+            initializeData();
+        });
+
+        let vehicleData = [];
+        
+        // APPS SCRIPT URL: Replace with your own deployed Google Apps Script endpoint.
+        // Deploy your Apps Script as a Web App (Execute as: Me, Who has access: Anyone) and paste the URL here.
+        // Leave as "YOUR_APPS_SCRIPT_URL_HERE" to use built-in demo data for portfolio showcase.
+        const GOOGLE_APPS_SCRIPT_URL = "YOUR_APPS_SCRIPT_URL_HERE";
+
+        // Demo data shown when no Apps Script URL is configured
+        const DEMO_DATA = [
+          { VehicleNumber:"WP-XXXX", InstitutionName:"District General Hospital", VehicleCategory:"Ambulance",   RunningCondition:"Running",      Brand:"Toyota",  Model:"HiAce",    FuelType:"Diesel", YearofManufacture:2019, Remarks:"Routine service due Jun 2026" },
+          { VehicleNumber:"NB-XXXX", InstitutionName:"Base Hospital",             VehicleCategory:"Staff Car",   RunningCondition:"Running",      Brand:"Suzuki",  Model:"Swift",    FuelType:"Petrol", YearofManufacture:2021, Remarks:"Good condition" },
+          { VehicleNumber:"EP-XXXX", InstitutionName:"MOH Office — Zone A",       VehicleCategory:"Van",         RunningCondition:"Needs Repair", Brand:"Nissan",  Model:"Urvan",    FuelType:"Diesel", YearofManufacture:2016, Remarks:"Gearbox issue — in workshop" },
+          { VehicleNumber:"CP-XXXX", InstitutionName:"Peripheral Health Unit B",  VehicleCategory:"Pickup Truck",RunningCondition:"Running",      Brand:"Mitsubishi",Model:"L200",  FuelType:"Diesel", YearofManufacture:2020, Remarks:"Insurance renewal due Aug 2026" },
+          { VehicleNumber:"NC-XXXX", InstitutionName:"District General Hospital", VehicleCategory:"Ambulance",   RunningCondition:"Running",      Brand:"Toyota",  Model:"HiAce",    FuelType:"Diesel", YearofManufacture:2022, Remarks:"" },
+          { VehicleNumber:"WP-YYYY", InstitutionName:"Teaching Hospital",         VehicleCategory:"Staff Car",   RunningCondition:"Needs Repair", Brand:"Honda",   Model:"Civic",    FuelType:"Petrol", YearofManufacture:2018, Remarks:"Engine overhaul in progress" },
+          { VehicleNumber:"SG-XXXX", InstitutionName:"MOH Office — Zone B",       VehicleCategory:"Motorbike",   RunningCondition:"Running",      Brand:"Yamaha",  Model:"FZS",      FuelType:"Petrol", YearofManufacture:2023, Remarks:"" },
+          { VehicleNumber:"NB-YYYY", InstitutionName:"Peripheral Health Unit C",  VehicleCategory:"Staff Car",   RunningCondition:"Running",      Brand:"Toyota",  Model:"Corolla",  FuelType:"Petrol", YearofManufacture:2020, Remarks:"Licence renewal due May 2026" },
+        ];
+        
+        const dataNote = document.getElementById('data-source-note');
+        const loadingContainer = document.getElementById('vehicleTableBody').querySelector('tr td');
+        const statsContainer = document.getElementById('stats-container');
+
+        /**
+         * Initializes data — falls back to demo data if no Apps Script URL is configured.
+         */
+        async function initializeData() {
+            statsContainer.innerHTML = '';
+
+            // Use demo data if no real endpoint is configured
+            if (!GOOGLE_APPS_SCRIPT_URL || GOOGLE_APPS_SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
+                vehicleData = DEMO_DATA;
+                renderStats(vehicleData);
+                populateFilters(vehicleData);
+                renderTable(vehicleData);
+                dataNote.textContent = `Showing demo data (${vehicleData.length} sample records). Configure GOOGLE_APPS_SCRIPT_URL to connect live fleet data.`;
+                dataNote.classList.remove('text-red-600', 'font-bold');
+                dataNote.classList.add('text-blue-600', 'font-semibold');
+                return;
+            }
+
+            try {
+                const response = await fetch(GOOGLE_APPS_SCRIPT_URL);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status} (${response.statusText || 'Unknown Error'})`);
+                }
+                const rawData = await response.json();
+                vehicleData = Array.isArray(rawData) ? rawData : [];
+
+                if (vehicleData.length > 0) {
+                    renderStats(vehicleData);
+                    populateFilters(vehicleData);
+                    renderTable(vehicleData);
+                    dataNote.textContent = `Vehicle data loaded live from Google Sheet (${vehicleData.length} records).`;
+                    dataNote.classList.remove('text-gray-500', 'text-red-600', 'font-bold');
+                    dataNote.classList.add('text-green-600', 'font-semibold');
+                } else {
+                    loadingContainer.innerHTML = 'No data available from the Google Sheet. (Empty array received)';
+                }
+
+            } catch (error) {
+                console.error("Failed to fetch vehicle data:", error);
+                // Fall back to demo data on fetch error
+                vehicleData = DEMO_DATA;
+                renderStats(vehicleData);
+                populateFilters(vehicleData);
+                renderTable(vehicleData);
+                dataNote.textContent = `Could not reach Apps Script endpoint — showing demo data instead. Check console for details.`;
+                dataNote.classList.remove('text-gray-500', 'text-green-600', 'font-semibold');
+                dataNote.classList.add('text-yellow-600', 'font-semibold');
+                lucide.createIcons();
+            }
+        }
+
+        /**
+         * Renders the statistics cards.
+         */
+        function renderStats(data) {
+            const total = data.length;
+            
+            // Note: Keys are assumed to be cleaned by the Apps Script (e.g., RunningCondition)
+            const running = data.filter(v => v.RunningCondition === 'Running').length;
+            const needsRepair = data.filter(v => v.RunningCondition === 'Needs Repair').length;
+
+            const stats = [
+                {
+                    title: 'Total Vehicles',
+                    value: total,
+                    icon: 'car',
+                    color: 'bg-card-total text-teal-800 border-teal-300'
+                },
+                {
+                    title: 'Currently Running',
+                    value: running,
+                    icon: 'check-circle',
+                    color: 'bg-card-running text-green-800 border-green-300'
+                },
+                {
+                    title: 'Needs Immediate Repair',
+                    value: needsRepair,
+                    icon: 'tool',
+                    color: 'bg-card-repair text-red-800 border-red-300'
+                }
+            ];
+
+            const container = document.getElementById('stats-container');
+            container.innerHTML = stats.map(stat => `
+                <div class="p-6 rounded-xl shadow-lg ${stat.color} border-l-4">
+                    <div class="flex items-center justify-between">
+                        <p class="text-sm font-medium opacity-80">${stat.title}</p>
+                        <i data-lucide="${stat.icon}" class="w-6 h-6"></i>
+                    </div>
+                    <p class="text-3xl font-bold mt-2">${stat.value}</p>
+                </div>
+            `).join('');
+
+            // Re-initialize Lucide icons for the new HTML content
+            lucide.createIcons();
+        }
+
+        /**
+         * Populates the Category filter dropdown dynamically.
+         */
+        function populateFilters(data) {
+            // Note: Using the cleaned key from Apps Script (VehicleCategory)
+            const categories = [...new Set(data.map(v => v.VehicleCategory).filter(Boolean))].sort();
+            const filter = document.getElementById('categoryFilter');
+
+            // Clear existing options, keeping "All Categories"
+            filter.innerHTML = '<option value="">All Categories</option>';
+
+            categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                filter.appendChild(option);
+            });
+        }
+
+        /**
+         * Filters the vehicle data based on user input and selected filters.
+         */
+        function filterVehicles() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const category = document.getElementById('categoryFilter').value;
+            const condition = document.getElementById('conditionFilter').value;
+
+            const filteredData = vehicleData.filter(vehicle => {
+                // Note: Using the cleaned keys from Apps Script (VehicleNumber, InstitutionName, RunningCondition, VehicleCategory)
+                const matchesSearch = (vehicle.VehicleNumber && vehicle.VehicleNumber.toLowerCase().includes(searchTerm)) ||
+                                    (vehicle.InstitutionName && vehicle.InstitutionName.toLowerCase().includes(searchTerm));
+
+                const matchesCategory = category === "" || vehicle.VehicleCategory === category;
+                const matchesCondition = condition === "" || vehicle.RunningCondition === condition;
+
+                return matchesSearch && matchesCategory && matchesCondition;
+            });
+
+            renderTable(filteredData);
+        }
+
+        /**
+         * Renders the filtered data into the table body.
+         */
+        function renderTable(data) {
+            const tableBody = document.getElementById('vehicleTableBody');
+            tableBody.innerHTML = ''; // Clear existing rows
+            const noResults = document.getElementById('noResults');
+            
+            // Hide loading container if data is present
+            if (data.length > 0) {
+                 if (loadingContainer) loadingContainer.style.display = 'none';
+            }
+
+
+            if (data.length === 0) {
+                noResults.classList.remove('hidden');
+                // Ensure table body is empty when no results are found
+                if(loadingContainer) loadingContainer.style.display = 'table-cell'; // Show container for no results message
+                tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-500">No vehicles match the current filters.</td></tr>';
+                return;
+            }
+
+            noResults.classList.add('hidden');
+
+            data.forEach(vehicle => {
+                // Note: Using the cleaned key from Apps Script (RunningCondition)
+                const condition = vehicle.RunningCondition || 'N/A';
+                const conditionClass = condition === 'Running'
+                    ? 'bg-green-100 text-green-800'
+                    : condition === 'Needs Repair'
+                    ? 'bg-red-100 text-red-800'
+                    : 'bg-gray-100 text-gray-800';
+                
+                // Note: Using the cleaned keys from Apps Script
+                const vehicleNumber = vehicle.VehicleNumber || 'N/A';
+                const institutionName = vehicle.InstitutionName || 'N/A';
+                const vehicleCategory = vehicle.VehicleCategory || 'N/A';
+                const brand = vehicle.Brand || 'N/A';
+                const model = vehicle.Model || 'N/A';
+                const fuelType = vehicle.FuelType || 'N/A';
+                const yearOfManufacture = vehicle.YearofManufacture || 'N/A';
+                const remarks = vehicle.Remarks || 'N/A';
+                
+                // Truncate long remarks for better table display, show full text on hover
+                const truncatedRemarks = remarks.length > 50 ? remarks.substring(0, 47) + '...' : remarks;
+
+
+                const row = `
+                    <tr class="hover:bg-gray-50 transition duration-100">
+                        <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            ${vehicleNumber}
+                            <div class="text-xs text-gray-500 mt-0.5">${fuelType} / ${yearOfManufacture}</div>
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-600">${institutionName}</td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-600">${vehicleCategory}</td>
+                        <td class="px-4 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${conditionClass}">
+                                ${condition}
+                            </span>
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-600">${brand} - ${model}</td>
+                        <td class="px-4 py-4 text-sm text-gray-600 max-w-xs truncate" title="${remarks}">
+                            ${truncatedRemarks}
+                        </td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+        }
+
+        /**
+         * Clears all filters and resets the table.
+         */
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('categoryFilter').value = '';
+            document.getElementById('conditionFilter').value = '';
+            filterVehicles(); // Rerender with cleared filters
+        }
+
+    </script>
+
+    <!-- Developer Footer -->
+    <footer class="mt-10 pt-6 pb-4 border-t border-gray-200 text-center text-sm text-gray-500">
+        <p>
+            <strong class="text-gray-700">VMS — Vehicle Management System</strong>
+            &nbsp;·&nbsp; Healthcare Fleet Management &nbsp;·&nbsp; 2026
+        </p>
+        <p class="mt-1">
+            Built by
+            <a href="https://drjeevaraj.com" target="_blank" rel="noopener" class="text-vms-primary hover:underline font-semibold">Dr. T. Jeevaraj</a>
+            &nbsp;·&nbsp; MBBS, MCGP, MSc Biomedical Informatics &nbsp;·&nbsp; MD Health Informatics Trainee
+        </p>
+        <div class="flex gap-4 justify-center flex-wrap mt-2 text-xs">
+            <a href="https://drjeevaraj.com/cv.html" target="_blank" rel="noopener" class="text-gray-400 hover:text-vms-primary hover:underline">Developer CV</a>
+            <a href="https://drjeevaraj.com/dev.html" target="_blank" rel="noopener" class="text-gray-400 hover:text-vms-primary hover:underline">Dev Portfolio</a>
+            <a href="https://github.com/jeevantjr/vmsrdhstrinco" target="_blank" rel="noopener" class="text-gray-400 hover:text-vms-primary hover:underline">GitHub</a>
+            <a href="https://drjeevaraj.com" target="_blank" rel="noopener" class="text-gray-400 hover:text-vms-primary hover:underline">drjeevaraj.com</a>
+        </div>
+        <p class="mt-2 text-xs text-gray-400 italic">All vehicle data shown is fictitious demo data. Configure your Apps Script URL and Google Sheet to connect live data.</p>
+    </footer>
+
+</body>
+</html>

@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VMS — Vehicle Management System</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:    #0f2b1e;
+      --navy-dk: #081a10;
+      --green:   #1a7a3e;
+      --green-md:#22a055;
+      --green-lt:#e0f5ea;
+      --teal:    #0e9e8a;
+      --blue:    #1a5fa8;
+      --amber:   #d4730a;
+      --amber-lt:#fff3e0;
+      --rose:    #c0392b;
+      --purple:  #5c3ab8;
+      --bg:      #f2f7f4;
+      --card:    #ffffff;
+      --text:    #132010;
+      --muted:   #4a6a55;
+      --border:  #c5dece;
+      --shadow:  0 2px 16px rgba(10,60,20,0.10);
+      --radius:  14px;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── NAV ── */
+    .navbar {
+      position: fixed; top: 0; left: 0; width: 100%; z-index: 1000;
+      background: linear-gradient(135deg, var(--navy-dk) 0%, var(--navy) 100%);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    }
+    .nav-container {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.85rem 1.5rem; max-width: 1200px; margin: auto;
+      flex-wrap: wrap; gap: 0.5rem;
+    }
+    .nav-brand { display: flex; align-items: center; gap: 0.6rem; }
+    .nav-icon {
+      width: 34px; height: 34px; border-radius: 8px;
+      background: linear-gradient(135deg, var(--green-md), var(--green));
+      display: flex; align-items: center; justify-content: center; font-size: 1rem;
+    }
+    .nav-logo { font-weight: 800; font-size: 1.15rem; color: #fff; letter-spacing: -0.3px; }
+    .nav-logo span { color: #6ee89a; }
+    .nav-links { display: flex; gap: 0.2rem; align-items: center; flex-wrap: wrap; }
+    .nav-links a {
+      color: rgba(255,255,255,0.85); text-decoration: none;
+      font-weight: 500; font-size: 0.85rem;
+      padding: 0.38em 0.85em; border-radius: 6px; transition: background 0.2s;
+    }
+    .nav-links a:hover { background: rgba(255,255,255,0.15); }
+    .nav-badge {
+      background: var(--green-md); color: #fff;
+      font-size: 0.7rem; font-weight: 700;
+      padding: 0.2em 0.65em; border-radius: 50px;
+      letter-spacing: 0.5px; text-transform: uppercase; margin-left: 0.4rem;
+    }
+    .menu-toggle { display: none; color: #fff; font-size: 1.5rem; cursor: pointer; background: none; border: none; }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(160deg, var(--navy-dk) 0%, var(--navy) 55%, #133320 100%);
+      color: #fff; padding: 8rem 1.5rem 5rem; text-align: center;
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 25% 60%, rgba(26,122,62,0.15) 0%, transparent 55%),
+                  radial-gradient(ellipse at 75% 30%, rgba(14,158,138,0.12) 0%, transparent 50%);
+    }
+    .hero-content { position: relative; z-index: 1; max-width: 780px; margin: 0 auto; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: rgba(34,160,85,0.18); border: 1px solid rgba(34,160,85,0.4);
+      color: #6ee89a; font-size: 0.78rem; font-weight: 700;
+      padding: 0.4em 1.1em; border-radius: 50px; text-transform: uppercase;
+      letter-spacing: 0.8px; margin-bottom: 1.5rem;
+    }
+    .hero-badge .dot { width: 7px; height: 7px; background: var(--amber); border-radius: 50%; animation: blink 2s ease-in-out infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .hero h1 { font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 900; letter-spacing: -0.8px; line-height: 1.15; margin-bottom: 1rem; }
+    .hero h1 em { color: #6ee89a; font-style: normal; }
+    .hero-sub { font-size: clamp(1rem, 2vw, 1.15rem); opacity: 0.82; line-height: 1.7; max-width: 620px; margin: 0 auto 2rem; }
+    .hero-pills { display: flex; gap: 0.6rem; flex-wrap: wrap; justify-content: center; margin-bottom: 2.5rem; }
+    .hero-pill {
+      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+      color: rgba(255,255,255,0.9); font-size: 0.8rem; font-weight: 600;
+      padding: 0.35em 1em; border-radius: 50px;
+    }
+    .hero-ctas { display: flex; gap: 0.8rem; justify-content: center; flex-wrap: wrap; }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--green-md), var(--green));
+      color: #fff; text-decoration: none; padding: 0.85rem 2rem; border-radius: 50px;
+      font-weight: 700; font-size: 0.95rem; border: none; cursor: pointer; font-family: inherit;
+      box-shadow: 0 4px 16px rgba(34,160,85,0.4); transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(34,160,85,0.5); }
+    .btn-outline {
+      background: transparent; color: #fff;
+      border: 1.5px solid rgba(255,255,255,0.4); padding: 0.85rem 2rem; border-radius: 50px;
+      font-weight: 600; font-size: 0.95rem; text-decoration: none; cursor: pointer; font-family: inherit;
+      transition: background 0.2s;
+    }
+    .btn-outline:hover { background: rgba(255,255,255,0.1); }
+
+    /* ── STATS BAR ── */
+    .stats-bar { background: var(--green); padding: 1.4rem 1.5rem; }
+    .stats-inner {
+      max-width: 1000px; margin: 0 auto;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 1rem; text-align: center;
+    }
+    .stat-item { color: #fff; }
+    .stat-item .num { font-size: 1.7rem; font-weight: 800; line-height: 1; }
+    .stat-item .lbl { font-size: 0.73rem; font-weight: 600; opacity: 0.85; margin-top: 0.2rem; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* ── SECTIONS ── */
+    section { padding: 4.5rem 1.5rem; }
+    .section-inner { max-width: 1100px; margin: 0 auto; }
+    .section-header { text-align: center; margin-bottom: 2.8rem; }
+    .section-tag {
+      display: inline-block; font-size: 0.73rem; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; color: var(--green); background: var(--green-lt);
+      padding: 0.3em 0.9em; border-radius: 50px; margin-bottom: 0.8rem;
+    }
+    .section-header h2 { font-size: clamp(1.5rem, 3vw, 2.1rem); font-weight: 800; letter-spacing: -0.4px; color: var(--navy); }
+    .section-header p { font-size: 1rem; color: var(--muted); max-width: 580px; margin: 0.6rem auto 0; line-height: 1.7; }
+
+    /* ── ARCHITECTURE DIAGRAM ── */
+    .arch-diagram { display: flex; flex-direction: column; gap: 0; max-width: 780px; margin: 0 auto 2rem; }
+    .arch-layer {
+      display: grid; grid-template-columns: 180px 1fr; align-items: stretch;
+      border-radius: 0; overflow: hidden;
+    }
+    .arch-layer:first-child { border-radius: 14px 14px 0 0; }
+    .arch-layer:last-child  { border-radius: 0 0 14px 14px; }
+    .arch-layer + .arch-layer { border-top: 2px solid #fff; }
+    .arch-label {
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 0.82rem; letter-spacing: 0.5px;
+      text-transform: uppercase; color: #fff; padding: 1.2rem 1rem;
+      text-align: center;
+    }
+    .arch-content {
+      display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+      padding: 1rem 1.3rem; background: rgba(255,255,255,0.06); font-size: 0.85rem; color: rgba(255,255,255,0.88);
+    }
+    .arch-chip {
+      background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.28);
+      padding: 0.25em 0.7em; border-radius: 50px; font-size: 0.78rem; font-weight: 600; white-space: nowrap;
+    }
+    .layer-1 { background: #1a5fa8; }
+    .layer-2 { background: #1a7a3e; }
+    .layer-3 { background: #0e9e8a; }
+    .arch-arrow { text-align: center; color: var(--green); font-size: 1.2rem; padding: 0.2rem 0; }
+
+    /* ── FEATURES GRID ── */
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.3rem; }
+    .feat-card {
+      background: var(--card); border-radius: var(--radius);
+      border: 1px solid var(--border); box-shadow: var(--shadow); padding: 1.8rem 1.6rem;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .feat-card:hover { transform: translateY(-3px); box-shadow: 0 6px 24px rgba(10,60,20,0.14); }
+    .feat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; margin-bottom: 1rem; }
+    .icon-green  { background: linear-gradient(135deg, #e0f5ea, #b0e8c0); }
+    .icon-teal   { background: linear-gradient(135deg, #e0f5f2, #b0ebe3); }
+    .icon-blue   { background: linear-gradient(135deg, #e0eeff, #b0ccf8); }
+    .icon-amber  { background: linear-gradient(135deg, #fff3e0, #ffe0b0); }
+    .icon-rose   { background: linear-gradient(135deg, #ffe0e0, #ffb8b8); }
+    .icon-purple { background: linear-gradient(135deg, #f0e8ff, #d8c0ff); }
+    .icon-navy   { background: linear-gradient(135deg, #e0eaf5, #b8cce8); }
+    .feat-card h3 { font-size: 1rem; font-weight: 700; color: var(--navy); margin-bottom: 0.5rem; }
+    .feat-card p  { font-size: 0.875rem; color: var(--muted); line-height: 1.65; }
+    .feat-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 1rem; }
+    .feat-tag { font-size: 0.7rem; font-weight: 600; color: var(--muted); background: var(--bg); border: 1px solid var(--border); padding: 0.2em 0.6em; border-radius: 4px; }
+
+    /* ── APP PREVIEW (dark shell) ── */
+    .demo-section { background: var(--navy-dk); }
+    .demo-section .section-header h2 { color: #fff; }
+    .demo-section .section-header p  { color: rgba(255,255,255,0.6); }
+    .demo-section .section-tag { background: rgba(34,160,85,0.2); color: #6ee89a; }
+
+    .app-shell {
+      background: #122018; border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.1); overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    .app-titlebar {
+      background: #0a1510; padding: 0.6rem 1rem;
+      display: flex; align-items: center; gap: 0.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .traffic-lights { display: flex; gap: 0.35rem; }
+    .tl { width: 12px; height: 12px; border-radius: 50%; }
+    .tl-r { background: #ff5f57; } .tl-y { background: #ffbd2e; } .tl-g { background: #28c840; }
+    .titlebar-label { font-size: 0.78rem; color: rgba(255,255,255,0.5); margin-left: 0.5rem; font-weight: 500; }
+    .titlebar-label strong { color: rgba(255,255,255,0.8); }
+
+    .app-body { display: grid; grid-template-columns: 220px 1fr; min-height: 500px; }
+
+    .app-sidebar { background: #0a1510; border-right: 1px solid rgba(255,255,255,0.06); padding: 1.2rem 0; }
+    .sidebar-section { padding: 0 0.75rem; margin-bottom: 1.5rem; }
+    .sidebar-label { font-size: 0.62rem; color: rgba(255,255,255,0.3); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 0 0.5rem; margin-bottom: 0.4rem; }
+    .sidebar-item {
+      display: flex; align-items: center; gap: 0.65rem;
+      padding: 0.52rem 0.75rem; border-radius: 8px;
+      font-size: 0.82rem; color: rgba(255,255,255,0.6);
+      cursor: pointer; transition: all 0.15s; margin-bottom: 0.1rem;
+    }
+    .sidebar-item:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.9); }
+    .sidebar-item.active { background: rgba(34,160,85,0.2); color: #6ee89a; font-weight: 600; }
+    .sidebar-item .si-icon { font-size: 0.95rem; width: 18px; text-align: center; }
+    .sidebar-badge { margin-left: auto; background: var(--amber); font-size: 0.62rem; font-weight: 700; color: #fff; padding: 0.15em 0.45em; border-radius: 50px; }
+
+    .app-main { padding: 1.5rem; overflow: hidden; }
+    .app-topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.2rem; flex-wrap: wrap; gap: 0.6rem; }
+    .app-topbar h3 { font-size: 1rem; font-weight: 700; color: #fff; }
+    .app-topbar .app-date { font-size: 0.75rem; color: rgba(255,255,255,0.4); }
+    .app-btn { background: var(--green-md); color: #fff; border: none; border-radius: 7px; padding: 0.45rem 1rem; font-size: 0.78rem; font-weight: 700; cursor: pointer; font-family: inherit; }
+
+    .app-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; margin-bottom: 1.2rem; }
+    .app-stat-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 0.85rem 0.9rem; }
+    .app-stat-card .as-num { font-size: 1.4rem; font-weight: 800; color: #fff; line-height: 1; }
+    .app-stat-card .as-lbl { font-size: 0.65rem; color: rgba(255,255,255,0.45); margin-top: 0.25rem; text-transform: uppercase; letter-spacing: 0.4px; font-weight: 600; }
+    .app-stat-card .as-delta { font-size: 0.72rem; font-weight: 600; margin-top: 0.15rem; }
+    .as-green .as-num { color: #6ee89a; } .as-green .as-delta { color: #6ee89a; }
+    .as-rose  .as-num { color: #ff7b7b; } .as-rose  .as-delta { color: #ff7b7b; }
+    .as-amber .as-num { color: #ffca6e; } .as-amber .as-delta { color: #ffca6e; }
+    .as-blue  .as-num { color: #7eb5ff; } .as-blue  .as-delta { color: #7eb5ff; }
+
+    .app-table-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; overflow: hidden; }
+    .app-table-header { padding: 0.75rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: space-between; }
+    .app-table-header h4 { font-size: 0.82rem; font-weight: 700; color: rgba(255,255,255,0.8); }
+    .demo-tag { font-size: 0.65rem; background: rgba(212,115,10,0.25); color: var(--amber); border: 1px solid rgba(212,115,10,0.4); padding: 0.15em 0.6em; border-radius: 50px; font-weight: 700; }
+    .app-table { width: 100%; border-collapse: collapse; }
+    .app-table th { font-size: 0.63rem; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 0.6px; font-weight: 700; padding: 0.55rem 0.8rem; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .app-table td { font-size: 0.78rem; color: rgba(255,255,255,0.7); padding: 0.6rem 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: middle; }
+    .app-table tr:last-child td { border-bottom: none; }
+    .app-table tr:hover td { background: rgba(255,255,255,0.04); }
+    .status-badge { display: inline-block; border-radius: 50px; padding: 0.15em 0.65em; font-size: 0.68rem; font-weight: 700; }
+    .s-running  { background: rgba(34,160,85,0.25);  color: #6ee89a; }
+    .s-repair   { background: rgba(192,57,43,0.25);  color: #ff7b7b; }
+    .s-idle     { background: rgba(212,115,10,0.25); color: #ffca6e; }
+    .s-expired  { background: rgba(192,57,43,0.35);  color: #ffaaaa; }
+
+    /* ── DB ENTITIES ── */
+    .db-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
+    .db-card { background: var(--card); border-radius: 10px; border: 1px solid var(--border); box-shadow: var(--shadow); padding: 1.2rem 1.3rem; }
+    .db-card .db-entity { font-size: 0.88rem; font-weight: 700; color: var(--navy); margin-bottom: 0.4rem; display: flex; align-items: center; gap: 0.4rem; }
+    .db-card .db-entity .db-icon { font-size: 1rem; }
+    .db-card .db-fields { font-size: 0.78rem; color: var(--muted); line-height: 1.6; }
+
+    /* ── WORKFLOW ── */
+    .workflow-alt { background: linear-gradient(135deg, #f2f7f4, #e8f5ee); }
+    .steps-row { display: flex; gap: 0; overflow-x: auto; padding-bottom: 0.5rem; }
+    .step-block { flex: 1; min-width: 130px; position: relative; }
+    .step-block + .step-block::before {
+      content: '→'; position: absolute; left: -14px; top: 22px;
+      color: var(--green); font-size: 1.2rem; font-weight: 700; z-index: 1;
+    }
+    .step-inner {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 1.1rem 1rem;
+      margin: 0 0.4rem; box-shadow: var(--shadow); text-align: center;
+    }
+    .step-num { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, var(--green-md), var(--green)); color: #fff; font-size: 0.95rem; font-weight: 800; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.7rem; }
+    .step-inner h4 { font-size: 0.8rem; font-weight: 700; color: var(--navy); margin-bottom: 0.3rem; }
+    .step-inner p  { font-size: 0.73rem; color: var(--muted); line-height: 1.5; }
+
+    /* ── CHARTS ── */
+    .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .chart-card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); padding: 1.6rem; }
+    .chart-card h3 { font-size: 0.9rem; font-weight: 700; color: var(--navy); margin-bottom: 1.2rem; }
+    .chart-wrapper { position: relative; height: 200px; }
+
+    /* ── SECURITY ── */
+    .sec-section { background: var(--navy); }
+    .sec-section .section-header h2 { color: #fff; }
+    .sec-section .section-header p  { color: rgba(255,255,255,0.6); }
+    .sec-section .section-tag { background: rgba(34,160,85,0.2); color: #6ee89a; }
+    .sec-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; }
+    .sec-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius); padding: 1.4rem 1.5rem; }
+    .sec-card h4 { font-size: 0.9rem; font-weight: 700; color: #6ee89a; margin-bottom: 0.6rem; display: flex; align-items: center; gap: 0.5rem; }
+    .sec-card p  { font-size: 0.83rem; color: rgba(255,255,255,0.65); line-height: 1.65; }
+
+    /* ── TECH ── */
+    .tech-dark { background: var(--navy-dk); }
+    .tech-dark .section-header h2 { color: #fff; }
+    .tech-dark .section-header p  { color: rgba(255,255,255,0.6); }
+    .tech-dark .section-tag { background: rgba(34,160,85,0.2); color: #6ee89a; }
+    .tech-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
+    .tech-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius); padding: 1.2rem 1.4rem; }
+    .tech-card h4 { font-size: 0.78rem; font-weight: 700; color: #6ee89a; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 0.7rem; }
+    .tech-chips { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    .tech-chip { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.8); font-size: 0.75rem; font-weight: 600; padding: 0.25em 0.65em; border-radius: 50px; border: 1px solid rgba(255,255,255,0.15); }
+
+    /* ── FUTURE ── */
+    .future-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; }
+    .future-card { background: var(--card); border-radius: 10px; border-left: 4px solid var(--green); border: 1px solid var(--border); border-left-width: 4px; box-shadow: var(--shadow); padding: 1.2rem 1.3rem; }
+    .future-card h4 { font-size: 0.88rem; font-weight: 700; color: var(--navy); margin-bottom: 0.3rem; display: flex; align-items: center; gap: 0.4rem; }
+    .future-card p  { font-size: 0.8rem; color: var(--muted); line-height: 1.55; }
+
+    /* ── CTA ── */
+    .cta-section { background: linear-gradient(135deg, var(--green), var(--green-md)); text-align: center; padding: 4.5rem 1.5rem; color: #fff; }
+    .cta-section h2 { font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 800; margin-bottom: 0.75rem; }
+    .cta-section p  { font-size: 1rem; opacity: 0.88; max-width: 520px; margin: 0 auto 2rem; line-height: 1.6; }
+    .cta-btns { display: flex; gap: 0.8rem; justify-content: center; flex-wrap: wrap; }
+    .btn-white { background: #fff; color: var(--green); padding: 0.85rem 2rem; border-radius: 50px; font-weight: 700; font-size: 0.95rem; text-decoration: none; border: none; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,0.15); transition: transform 0.2s; font-family: inherit; }
+    .btn-white:hover { transform: translateY(-2px); }
+    .btn-outline-w { background: transparent; color: #fff; border: 1.5px solid rgba(255,255,255,0.55); padding: 0.85rem 2rem; border-radius: 50px; font-weight: 600; font-size: 0.95rem; text-decoration: none; cursor: pointer; font-family: inherit; transition: background 0.2s; }
+    .btn-outline-w:hover { background: rgba(255,255,255,0.12); }
+
+    /* ── FOOTER ── */
+    footer { background: var(--navy-dk); color: rgba(255,255,255,0.6); text-align: center; padding: 2rem 1.5rem; font-size: 0.83rem; }
+    footer strong { color: rgba(255,255,255,0.85); }
+    .footer-note { margin-top: 0.5rem; font-size: 0.75rem; color: rgba(255,255,255,0.35); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .app-body { grid-template-columns: 1fr; }
+      .app-sidebar { display: none; }
+      .app-stats { grid-template-columns: repeat(2, 1fr); }
+      .chart-grid { grid-template-columns: 1fr; }
+      .arch-layer { grid-template-columns: 130px 1fr; }
+    }
+    @media (max-width: 768px) {
+      .nav-links { display: none; width: 100%; flex-direction: column; background: rgba(0,10,5,0.98); padding: 0.75rem 1rem; border-radius: 0 0 10px 10px; }
+      .nav-links.show { display: flex; }
+      .menu-toggle { display: block; }
+      .steps-row { flex-direction: column; }
+      .step-block + .step-block::before { content: '↓'; left: 50%; top: -16px; transform: translateX(-50%); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <div class="nav-container">
+      <div class="nav-brand">
+        <div class="nav-icon">🚐</div>
+        <div class="nav-logo">VMS <span>Showcase</span></div>
+      </div>
+      <button class="menu-toggle" onclick="toggleMenu()" aria-label="Toggle menu">☰</button>
+      <div class="nav-links" id="navLinks">
+        <a href="#architecture">Architecture</a>
+        <a href="#features">Features</a>
+        <a href="#preview">Preview</a>
+        <a href="#workflow">Workflow</a>
+        <a href="#tech">Technology</a>
+        <span class="nav-badge">Live</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="dot"></span>
+        Web-Based Fleet Management · Healthcare Sector
+      </div>
+      <h1>Vehicle Management<br><em>System (VMS)</em></h1>
+      <p class="hero-sub">
+        A centralized digital platform that replaces manual vehicle registers, fuel books, maintenance logs, and insurance files with an integrated, role-aware fleet management system built for healthcare institutions.
+      </p>
+      <div class="hero-pills">
+        <span class="hero-pill">🚗 Fleet Registry</span>
+        <span class="hero-pill">⛽ Fuel Monitoring</span>
+        <span class="hero-pill">🔧 Maintenance Tracking</span>
+        <span class="hero-pill">📋 Compliance Management</span>
+        <span class="hero-pill">📊 Analytics & Reports</span>
+      </div>
+      <div class="hero-ctas">
+        <button class="btn-primary" onclick="document.getElementById('preview').scrollIntoView({behavior:'smooth'})">
+          View App Preview
+        </button>
+        <button class="btn-outline" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">
+          Explore Features
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS BAR -->
+  <div class="stats-bar">
+    <div class="stats-inner">
+      <div class="stat-item"><div class="num">7</div><div class="lbl">Core Components</div></div>
+      <div class="stat-item"><div class="num">10</div><div class="lbl">Database Entities</div></div>
+      <div class="stat-item"><div class="num">3</div><div class="lbl">User Roles (RBAC)</div></div>
+      <div class="stat-item"><div class="num">OTP</div><div class="lbl">2-Factor Auth</div></div>
+      <div class="stat-item"><div class="num">PDF+XLS</div><div class="lbl">Export Formats</div></div>
+      <div class="stat-item"><div class="num">Auto</div><div class="lbl">Expiry Alerts</div></div>
+    </div>
+  </div>
+
+  <!-- ARCHITECTURE -->
+  <section id="architecture">
+    <div class="section-inner">
+      <div class="section-header">
+        <div class="section-tag">System Design</div>
+        <h2>Three-Tier Architecture</h2>
+        <p>A classic three-tier model separating the presentation, application, and data layers — ensuring maintainability, scalability, and clean security boundaries.</p>
+      </div>
+
+      <div class="arch-diagram">
+        <div class="arch-layer">
+          <div class="arch-label layer-1">Presentation<br>Layer</div>
+          <div class="arch-content">
+            <span class="arch-chip">HTML5</span>
+            <span class="arch-chip">CSS3</span>
+            <span class="arch-chip">Bootstrap</span>
+            <span class="arch-chip">JavaScript</span>
+            <span class="arch-chip">AJAX</span>
+            <span class="arch-chip">Chart.js</span>
+            <span class="arch-chip">DataTables.js</span>
+          </div>
+        </div>
+        <div class="arch-layer">
+          <div class="arch-label layer-2">Application<br>Layer</div>
+          <div class="arch-content">
+            <span class="arch-chip">PHP Business Logic</span>
+            <span class="arch-chip">Authentication Engine</span>
+            <span class="arch-chip">RBAC Module</span>
+            <span class="arch-chip">Notification Engine</span>
+            <span class="arch-chip">Reporting Engine</span>
+            <span class="arch-chip">PHPMailer</span>
+            <span class="arch-chip">FPDF / TCPDF</span>
+          </div>
+        </div>
+        <div class="arch-layer">
+          <div class="arch-label layer-3">Data<br>Layer</div>
+          <div class="arch-content">
+            <span class="arch-chip">MySQL Database</span>
+            <span class="arch-chip">Vehicle Records</span>
+            <span class="arch-chip">Fuel Logs</span>
+            <span class="arch-chip">Maintenance Records</span>
+            <span class="arch-chip">Compliance Data</span>
+            <span class="arch-chip">phpMyAdmin</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="features" style="background: linear-gradient(135deg,#f2f7f4,#e8f5ee);">
+    <div class="section-inner">
+      <div class="section-header">
+        <div class="section-tag">Core Components</div>
+        <h2>Seven Integrated Modules</h2>
+        <p>Each module addresses a specific operational domain of healthcare fleet management, from secure login through to PDF report generation.</p>
+      </div>
+      <div class="features-grid">
+
+        <div class="feat-card">
+          <div class="feat-icon icon-blue">🔐</div>
+          <h3>User Authentication & Security</h3>
+          <p>Secure login with Bcrypt password hashing, OTP two-factor verification, session management, and full audit trail logging for all user activity.</p>
+          <div class="feat-tags"><span class="feat-tag">OTP</span><span class="feat-tag">Bcrypt</span><span class="feat-tag">Audit Log</span><span class="feat-tag">Session Control</span></div>
+        </div>
+
+        <div class="feat-card">
+          <div class="feat-icon icon-green">🚗</div>
+          <h3>Vehicle Registry Management</h3>
+          <p>Complete fleet registry with vehicle registration, profile management, fuel type classification, and real-time operational status tracking across all institutions.</p>
+          <div class="feat-tags"><span class="feat-tag">Fleet Registry</span><span class="feat-tag">Status Tracking</span><span class="feat-tag">Profile Editing</span></div>
+        </div>
+
+        <div class="feat-card">
+          <div class="feat-icon icon-amber">⛽</div>
+          <h3>Fuel Management System</h3>
+          <p>Structured fuel entry recording with automated consumption calculations, cost analysis per vehicle, and trend reporting to identify inefficiencies.</p>
+          <div class="feat-tags"><span class="feat-tag">Consumption Calc</span><span class="feat-tag">Cost Trends</span><span class="feat-tag">Fuel Reports</span></div>
+        </div>
+
+        <div class="feat-card">
+          <div class="feat-icon icon-teal">🔧</div>
+          <h3>Maintenance Management</h3>
+          <p>Preventive maintenance scheduling by mileage or calendar interval, corrective repair tracking, service history per vehicle, and cost recording for budget analysis.</p>
+          <div class="feat-tags"><span class="feat-tag">Preventive</span><span class="feat-tag">Corrective</span><span class="feat-tag">Cost Recording</span></div>
+        </div>
+
+        <div class="feat-card">
+          <div class="feat-icon icon-rose">📋</div>
+          <h3>Insurance & License Management</h3>
+          <p>Digital storage of insurance certificates and revenue licenses, expiry date tracking, automated renewal reminders, and compliance status dashboards.</p>
+          <div class="feat-tags"><span class="feat-tag">Expiry Alerts</span><span class="feat-tag">Renewal Tracking</span><span class="feat-tag">Compliance</span></div>
+        </div>
+
+        <div class="feat-card">
+          <div class="feat-icon icon-purple">📁</div>
+          <h3>Document Management</h3>
+          <p>Paperless archive for service bills, insurance certificates, and revenue licenses. All uploaded files stored and indexed against vehicle records for instant audit retrieval.</p>
+          <div class="feat-tags"><span class="feat-tag">Upload</span><span class="feat-tag">Paperless Archive</span><span class="feat-tag">Audit-Ready</span></div>
+        </div>
+
+        <div class="feat-card">
+          <div class="feat-icon icon-navy">📊</div>
+          <h3>Reporting & Analytics Engine</h3>
+          <p>Consolidated vehicle, fuel, maintenance, and compliance reports. One-click export to PDF (FPDF/TCPDF) and Excel formats for management review and audit submission.</p>
+          <div class="feat-tags"><span class="feat-tag">PDF Export</span><span class="feat-tag">Excel Export</span><span class="feat-tag">Dashboards</span></div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- APP PREVIEW -->
+  <section id="preview" class="demo-section">
+    <div class="section-inner">
+      <div class="section-header">
+        <div class="section-tag">Interactive Preview</div>
+        <h2>Application Interface — Demo Data</h2>
+        <p>All vehicle registrations, fuel figures, and records shown are entirely fictional. This preview demonstrates the layout and data workflow of the live system.</p>
+      </div>
+
+      <div class="app-shell">
+        <div class="app-titlebar">
+          <div class="traffic-lights">
+            <div class="tl tl-r"></div><div class="tl tl-y"></div><div class="tl tl-g"></div>
+          </div>
+          <div class="titlebar-label">
+            <strong>Vehicle Management System</strong> · Fleet Dashboard · <span id="liveDate"></span>
+          </div>
+        </div>
+
+        <div class="app-body">
+          <div class="app-sidebar">
+            <div class="sidebar-section">
+              <div class="sidebar-label">Fleet</div>
+              <div class="sidebar-item active"><span class="si-icon">📊</span> Dashboard</div>
+              <div class="sidebar-item"><span class="si-icon">🚗</span> Vehicle Registry</div>
+              <div class="sidebar-item"><span class="si-icon">⛽</span> Fuel Logs</div>
+              <div class="sidebar-item"><span class="si-icon">🔧</span> Maintenance</div>
+            </div>
+            <div class="sidebar-section">
+              <div class="sidebar-label">Compliance</div>
+              <div class="sidebar-item"><span class="si-icon">📋</span> Insurance <span class="sidebar-badge">2</span></div>
+              <div class="sidebar-item"><span class="si-icon">📃</span> Licenses <span class="sidebar-badge">1</span></div>
+              <div class="sidebar-item"><span class="si-icon">📁</span> Documents</div>
+            </div>
+            <div class="sidebar-section">
+              <div class="sidebar-label">Reports</div>
+              <div class="sidebar-item"><span class="si-icon">📈</span> Analytics</div>
+              <div class="sidebar-item"><span class="si-icon">⬇️</span> Export</div>
+              <div class="sidebar-item"><span class="si-icon">🔐</span> Audit Log</div>
+            </div>
+          </div>
+
+          <div class="app-main">
+            <div class="app-topbar">
+              <div>
+                <h3>Fleet Dashboard — Operational Overview</h3>
+                <div class="app-date" id="appDate"></div>
+              </div>
+              <button class="app-btn" onclick="addVehicle()">+ Register Vehicle</button>
+            </div>
+
+            <div class="app-stats">
+              <div class="app-stat-card as-green">
+                <div class="as-num" id="s-total">42</div>
+                <div class="as-lbl">Total Fleet</div>
+                <div class="as-delta">↑ 2 this quarter</div>
+              </div>
+              <div class="app-stat-card as-green">
+                <div class="as-num" id="s-running">34</div>
+                <div class="as-lbl">Running</div>
+                <div class="as-delta">81% availability</div>
+              </div>
+              <div class="app-stat-card as-rose">
+                <div class="as-num" id="s-repair">5</div>
+                <div class="as-lbl">Under Repair</div>
+                <div class="as-delta">3 due back soon</div>
+              </div>
+              <div class="app-stat-card as-amber">
+                <div class="as-num" id="s-expiring">3</div>
+                <div class="as-lbl">Compliance Due</div>
+                <div class="as-delta">Within 30 days</div>
+              </div>
+            </div>
+
+            <div class="app-table-card">
+              <div class="app-table-header">
+                <h4>Vehicle Registry — Recent Entries</h4>
+                <span class="demo-tag">⚠ Demo Data Only</span>
+              </div>
+              <table class="app-table">
+                <thead>
+                  <tr>
+                    <th>Reg. Number</th>
+                    <th>Type</th>
+                    <th>Fuel</th>
+                    <th>Institution</th>
+                    <th>Last Service</th>
+                    <th>Insurance</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="fleetTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CHARTS -->
+  <section>
+    <div class="section-inner">
+      <div class="section-header">
+        <div class="section-tag">Analytics</div>
+        <h2>Built-In Fleet Analytics</h2>
+        <p>All reports are generated server-side and exportable to PDF or Excel. Charts are rendered client-side via Chart.js from live MySQL data.</p>
+      </div>
+      <div class="chart-grid">
+        <div class="chart-card">
+          <h3>Monthly Fuel Consumption — Litres (Demo)</h3>
+          <div class="chart-wrapper"><canvas id="chartFuel"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>Fleet Status Breakdown (Demo)</h3>
+          <div class="chart-wrapper"><canvas id="chartStatus"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>Maintenance Cost by Month — LKR (Demo)</h3>
+          <div class="chart-wrapper"><canvas id="chartMaint"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>Fuel Cost vs. Maintenance Cost Trend (Demo)</h3>
+          <div class="chart-wrapper"><canvas id="chartCost"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WORKFLOW -->
+  <section id="workflow" class="workflow-alt">
+    <div class="section-inner">
+      <div class="section-header">
+        <div class="section-tag">System Workflow</div>
+        <h2>Login to Report — 8 Steps</h2>
+        <p>A structured sequential flow from user login through to report generation, with automatic notification triggers at each compliance checkpoint.</p>
+      </div>
+      <div class="steps-row">
+        <div class="step-block">
+          <div class="step-inner">
+            <div class="step-num">1</div>
+            <h4>User Login</h4>
+            <p>Web browser access via secure login</p>
+          </div>
+        </div>
+        <div class="step-block">
+          <div class="step-inner">
+            <div class="step-num">2</div>
+            <h4>Auth & OTP</h4>
+            <p>Credentials + OTP two-factor verification</p>
+          </div>
+        </div>
+        <div class="step-block">
+          <div class="step-inner">
+            <div class="step-num">3</div>
+            <h4>Role Check</h4>
+            <p>RBAC enforces scoped access permissions</p>
+          </div>
+        </div>
+        <div class="step-block">
+          <div class="step-inner">
+            <div class="step-num">4</div>
+            <h4>Dashboard</h4>
+            <p>Role-specific widgets rendered</p>
+          </div>
+        </div>
+        <div class="step-block">
+          <div class="step-inner">
+            <div class="step-num">5</div>
+            <h4>Module Access</h4>
+            <p>Vehicle / Fuel / Maintenance / Compliance</p>
+          </div>
+        </div>
+        <div class="step-block">
+          <div class="step-inner">
+            <div class="step-num">6</div>
+            <h4>DB Transactions</h4>
+            <p>All entries persisted in MySQL</p>
+          </div>
+        </div>
+        <div class="step-block">
+          <div class="step-inner">
+            <div class="step-num">7</div>
+            <h4>Notifications</h4>
+            <p>Auto expiry reminders triggered</p>
+          </div>
+        </div>
+        <div class="step-block">
+          <div class="step-inner">
+            <div class="step-num">8</div>
+            <h4>Reports</h4>
+            <p>PDF & Excel export generated</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DATABASE ENTITIES -->
+  <section>
+    <div class="section-inner">
+      <div class="section-header">
+        <div class="section-tag">Data Architecture</div>
+        <h2>10 Core Database Entities</h2>
+        <p>MySQL schema designed around fleet management domains, each entity responsible for a distinct set of operational records.</p>
+      </div>
+      <div class="db-grid">
+        <div class="db-card"><div class="db-entity"><span class="db-icon">👤</span> Users</div><div class="db-fields">Username · Password Hash · User Role · Institution Assignment</div></div>
+        <div class="db-card"><div class="db-entity"><span class="db-icon">🏥</span> Institutions</div><div class="db-fields">Institution Details · Type · Region</div></div>
+        <div class="db-card"><div class="db-entity"><span class="db-icon">🚗</span> Vehicles</div><div class="db-fields">Registration No. · Vehicle Type · Fuel Type · Operational Status</div></div>
+        <div class="db-card"><div class="db-entity"><span class="db-icon">⛽</span> Fuel Logs</div><div class="db-fields">Quantity · Cost · Date · Vehicle Reference</div></div>
+        <div class="db-card"><div class="db-entity"><span class="db-icon">🔧</span> Services</div><div class="db-fields">Service Type · Provider · Cost · Service History</div></div>
+        <div class="db-card"><div class="db-entity"><span class="db-icon">📋</span> Insurance</div><div class="db-fields">Policy Details · Expiry Dates · Certificate Files</div></div>
+        <div class="db-card"><div class="db-entity"><span class="db-icon">📃</span> Licenses</div><div class="db-fields">Revenue License Details · Renewal Dates</div></div>
+        <div class="db-card"><div class="db-entity"><span class="db-icon">🗺️</span> Trips</div><div class="db-fields">Vehicle Usage · Movement Records · Purpose</div></div>
+        <div class="db-card"><div class="db-entity"><span class="db-icon">🔔</span> Notifications</div><div class="db-fields">Alert History · Reminder Records · Delivery Status</div></div>
+        <div class="db-card"><div class="db-entity"><span class="db-icon">📁</span> Documents</div><div class="db-fields">Uploaded Files · File References · Vehicle Link</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECURITY -->
+  <section class="sec-section">
+    <div class="section-inner">
+      <div class="section-header">
+        <div class="section-tag">Security Architecture</div>
+        <h2>Multi-Layer Security Design</h2>
+        <p>Built to protect fleet data against unauthorised access, session hijacking, and data breaches across all user roles.</p>
+      </div>
+      <div class="sec-grid">
+        <div class="sec-card">
+          <h4>🔐 Authentication</h4>
+          <p>Username/password validation combined with OTP two-factor verification. All sessions validated server-side with automatic blocking on unauthorised access attempts.</p>
+        </div>
+        <div class="sec-card">
+          <h4>🛡️ RBAC — Three Roles</h4>
+          <p>Admin, Unit Officer, and Institution User roles with scoped access permissions. Each role sees only the data and modules relevant to their function.</p>
+        </div>
+        <div class="sec-card">
+          <h4>🔑 Password Security</h4>
+          <p>Bcrypt-based hashing via PHP's <code style="font-size:0.78rem;background:rgba(255,255,255,0.1);padding:0.1em 0.4em;border-radius:3px;">password_hash()</code> and <code style="font-size:0.78rem;background:rgba(255,255,255,0.1);padding:0.1em 0.4em;border-radius:3px;">password_verify()</code>. No plain-text credentials stored.</p>
+        </div>
+        <div class="sec-card">
+          <h4>✅ Data Validation</h4>
+          <p>Server-side input validation on all form submissions. Form-level integrity checks prevent malformed or malicious data from reaching the database layer.</p>
+        </div>
+        <div class="sec-card">
+          <h4>📋 Audit Trail</h4>
+          <p>Comprehensive login tracking and activity logging. All data modifications are time-stamped and attributed to specific users for full accountability.</p>
+        </div>
+        <div class="sec-card">
+          <h4>🔒 Session Security</h4>
+          <p>Active session validation on every request. Expired or invalid sessions are automatically invalidated and redirected to the login page.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TECH STACK -->
+  <section id="tech" class="tech-dark">
+    <div class="section-inner">
+      <div class="section-header">
+        <div class="section-tag">Technology Stack</div>
+        <h2>Open-Source & Production-Grade</h2>
+        <p>Entirely open-source stack — no licensing costs, well-supported community, deployable on existing XAMPP infrastructure.</p>
+      </div>
+      <div class="tech-row">
+        <div class="tech-card">
+          <h4>Frontend</h4>
+          <div class="tech-chips">
+            <span class="tech-chip">HTML5</span><span class="tech-chip">CSS3</span>
+            <span class="tech-chip">Bootstrap</span><span class="tech-chip">JavaScript</span>
+            <span class="tech-chip">AJAX</span><span class="tech-chip">Chart.js</span>
+            <span class="tech-chip">DataTables.js</span><span class="tech-chip">Font Awesome</span>
+          </div>
+        </div>
+        <div class="tech-card">
+          <h4>Backend</h4>
+          <div class="tech-chips">
+            <span class="tech-chip">PHP</span>
+            <span class="tech-chip">PHPMailer</span>
+            <span class="tech-chip">FPDF</span>
+            <span class="tech-chip">TCPDF</span>
+          </div>
+        </div>
+        <div class="tech-card">
+          <h4>Database</h4>
+          <div class="tech-chips">
+            <span class="tech-chip">MySQL</span>
+            <span class="tech-chip">phpMyAdmin</span>
+          </div>
+        </div>
+        <div class="tech-card">
+          <h4>Dev Environment</h4>
+          <div class="tech-chips">
+            <span class="tech-chip">XAMPP Server</span>
+            <span class="tech-chip">Apache</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FUTURE ROADMAP -->
+  <section>
+    <div class="section-inner">
+      <div class="section-header">
+        <div class="section-tag">Roadmap</div>
+        <h2>Scalability & Future Architecture</h2>
+        <p>The VMS is architected with future expansion in mind, aligned with national digital health infrastructure plans.</p>
+      </div>
+      <div class="future-grid">
+        <div class="future-card"><h4>📍 GPS Tracking</h4><p>Real-time location monitoring integrated into the fleet dashboard.</p></div>
+        <div class="future-card"><h4>📱 Mobile Application</h4><p>Cross-platform mobile client for field officers and drivers.</p></div>
+        <div class="future-card"><h4>🤖 Predictive Maintenance</h4><p>AI-driven alerts based on usage patterns and historical service data.</p></div>
+        <div class="future-card"><h4>☁️ Cloud Deployment</h4><p>Migration to a managed cloud environment for high availability.</p></div>
+        <div class="future-card"><h4>💾 Automated Backup</h4><p>Scheduled backups and disaster recovery protocols.</p></div>
+        <div class="future-card"><h4>🔗 Gov. Integration</h4><p>API interfaces with national e-Government platforms and health data systems.</p></div>
+        <div class="future-card"><h4>📈 AI Fleet Analytics</h4><p>Machine learning models for fuel efficiency and cost optimisation.</p></div>
+        <div class="future-card"><h4>🌐 Multi-Language</h4><p>Tamil and Sinhala language interface support for wider accessibility.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <h2>A Portfolio Demonstration of Healthcare Fleet Systems</h2>
+    <p>VMS illustrates full-stack web application development applied to a real administrative problem — replacing paper registers with a secure, role-aware digital platform.</p>
+    <div class="cta-btns">
+      <a href="https://github.com/jeevantjr/vmsrdhstrinco" class="btn-white">GitHub Repository</a>
+      <a href="https://drjeevaraj.com/dev.html" class="btn-outline-w">View Portfolio</a>
+    </div>
+  </section>
+
+  <!-- ABOUT THE DEVELOPER -->
+  <section style="background:#0d2218; padding:4rem 1.5rem; text-align:center;">
+    <div style="max-width:780px; margin:0 auto;">
+      <h2 style="color:#fff; font-size:clamp(1.3rem,3vw,1.75rem); font-weight:800; margin-bottom:2rem; letter-spacing:-0.3px;">👨‍💻 About the Developer</h2>
+      <div style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:18px; padding:2rem 2.2rem; display:flex; align-items:flex-start; gap:1.8rem; text-align:left; flex-wrap:wrap;">
+        <img src="https://drjeevaraj.com/T. Jeevaraj.jpg"
+             alt="Dr. T. Jeevaraj"
+             style="width:96px; height:96px; border-radius:50%; object-fit:cover; border:3px solid #1a7a3e; flex-shrink:0;" />
+        <div style="flex:1; min-width:220px;">
+          <p style="color:#fff; font-size:1.1rem; font-weight:800; margin-bottom:0.2rem;">Dr. Thangarasa Jeevaraaj</p>
+          <p style="color:rgba(255,255,255,0.65); font-size:0.88rem; line-height:1.6; margin-bottom:0.9rem;">
+            MBBS · MCGP · MSc Biomedical Informatics · MD Trainee, Health Informatics<br/>
+            PGIM, University of Colombo · Sri Lanka
+          </p>
+          <p style="color:rgba(255,255,255,0.55); font-size:0.85rem; line-height:1.65; margin-bottom:1.2rem;">
+            Clinician-developer working at the intersection of medicine and software engineering. Builds open-source digital health tools — from community disease surveillance apps to healthcare fleet management systems — aimed at improving health system efficiency in resource-limited settings.
+          </p>
+          <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">
+            <a href="https://drjeevaraj.com" target="_blank" rel="noopener"
+               style="background:#1a7a3e; color:#fff; text-decoration:none; padding:0.4rem 1rem; border-radius:50px; font-size:0.82rem; font-weight:600;">🌐 Website</a>
+            <a href="https://drjeevaraj.com/cv.html" target="_blank" rel="noopener"
+               style="background:rgba(255,255,255,0.1); color:#fff; text-decoration:none; padding:0.4rem 1rem; border-radius:50px; font-size:0.82rem; font-weight:600; border:1px solid rgba(255,255,255,0.2);">📄 CV</a>
+            <a href="https://drjeevaraj.com/dev.html" target="_blank" rel="noopener"
+               style="background:rgba(255,255,255,0.1); color:#fff; text-decoration:none; padding:0.4rem 1rem; border-radius:50px; font-size:0.82rem; font-weight:600; border:1px solid rgba(255,255,255,0.2);">💻 Dev Portfolio</a>
+            <a href="https://www.linkedin.com/in/geevanathy/" target="_blank" rel="noopener"
+               style="background:rgba(255,255,255,0.1); color:#fff; text-decoration:none; padding:0.4rem 1rem; border-radius:50px; font-size:0.82rem; font-weight:600; border:1px solid rgba(255,255,255,0.2);">LinkedIn</a>
+            <a href="https://x.com/drjeevaraj" target="_blank" rel="noopener"
+               style="background:rgba(255,255,255,0.1); color:#fff; text-decoration:none; padding:0.4rem 1rem; border-radius:50px; font-size:0.82rem; font-weight:600; border:1px solid rgba(255,255,255,0.2);">𝕏 Twitter</a>
+            <a href="https://www.amazon.com/dp/B0H333G41P" target="_blank" rel="noopener"
+               style="background:rgba(255,255,255,0.1); color:#fff; text-decoration:none; padding:0.4rem 1rem; border-radius:50px; font-size:0.82rem; font-weight:600; border:1px solid rgba(255,255,255,0.2);">📚 Book</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <strong>Vehicle Management System (VMS)</strong> — Healthcare Fleet Management · Portfolio Showcase · 2026
+    <div style="margin-top:0.75rem; font-size:0.82rem; color:rgba(255,255,255,0.75);">
+      Built by <a href="https://drjeevaraj.com" target="_blank" rel="noopener" style="color:#fff; font-weight:700; text-decoration:none;">Dr. T. Jeevaraj</a>
+      &nbsp;·&nbsp; MBBS, MCGP, MSc Biomedical Informatics &nbsp;·&nbsp; MD Health Informatics Trainee
+    </div>
+    <div style="margin-top:0.6rem; display:flex; gap:1.2rem; justify-content:center; flex-wrap:wrap;">
+      <a href="https://github.com/jeevantjr/vmsrdhstrinco" target="_blank" rel="noopener" style="color:rgba(255,255,255,0.7); text-decoration:none; font-size:0.8rem;">GitHub ↗</a>
+      <a href="https://drjeevaraj.com/cv.html" target="_blank" rel="noopener" style="color:rgba(255,255,255,0.7); text-decoration:none; font-size:0.8rem;">Developer CV ↗</a>
+      <a href="https://drjeevaraj.com/dev.html" target="_blank" rel="noopener" style="color:rgba(255,255,255,0.7); text-decoration:none; font-size:0.8rem;">Dev Portfolio ↗</a>
+      <a href="https://drjeevaraj.com" target="_blank" rel="noopener" style="color:rgba(255,255,255,0.7); text-decoration:none; font-size:0.8rem;">drjeevaraj.com ↗</a>
+    </div>
+    <div class="footer-note">All vehicle registrations, figures, and records shown in this demo are entirely fictitious. The live system manages real fleet data within a secured healthcare institution network.</div>
+  </footer>
+
+  <script>
+    function toggleMenu() {
+      document.getElementById('navLinks').classList.toggle('show');
+    }
+
+    /* Live date */
+    function updateDate() {
+      var d = new Date();
+      var s = d.toLocaleDateString('en-GB', {weekday:'short',year:'numeric',month:'short',day:'numeric'}) +
+              ' · ' + d.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'});
+      var el = document.getElementById('liveDate'); if (el) el.textContent = s;
+      var ad = document.getElementById('appDate');  if (ad) ad.textContent = d.toLocaleDateString('en-GB', {weekday:'long',year:'numeric',month:'long',day:'numeric'});
+    }
+    updateDate(); setInterval(updateDate, 30000);
+
+    /* Demo fleet table */
+    var fleet = [
+      { reg:'NB-XXXX',  type:'Ambulance',     fuel:'Diesel', inst:'District General Hospital', svc:'12 May 2026', ins:'Oct 2026', status:'s-running', sTxt:'Running' },
+      { reg:'NB-XXXX',  type:'Staff Car',      fuel:'Petrol', inst:'Base Hospital A',            svc:'04 Apr 2026', ins:'Aug 2026', status:'s-running', sTxt:'Running' },
+      { reg:'NB-XXXX',  type:'Pickup Truck',   fuel:'Diesel', inst:'MOH Office North',           svc:'18 Mar 2026', ins:'Jul 2026', status:'s-repair',  sTxt:'Under Repair' },
+      { reg:'NB-XXXX',  type:'Van',            fuel:'Diesel', inst:'Divisional Hospital B',      svc:'28 May 2026', ins:'Jun 2026', status:'s-idle',    sTxt:'Idle' },
+      { reg:'NB-XXXX',  type:'Ambulance',      fuel:'Diesel', inst:'District General Hospital', svc:'01 Jun 2026', ins:'Dec 2026', status:'s-running', sTxt:'Running' },
+      { reg:'NB-XXXX',  type:'Staff Car',      fuel:'Petrol', inst:'Peripheral Unit C',          svc:'22 Feb 2026', ins:'May 2026', status:'s-expired', sTxt:'Insurance Due' },
+    ];
+
+    function renderFleet() {
+      var tb = document.getElementById('fleetTable');
+      tb.innerHTML = '';
+      fleet.forEach(function(v) {
+        var insCls = v.ins === 'May 2026' ? 'color:#ffca6e;font-weight:700' : 'color:rgba(255,255,255,0.7)';
+        var tr = document.createElement('tr');
+        tr.innerHTML = [
+          '<td><code style="font-size:0.75rem;color:#6ee89a;">' + v.reg + '</code></td>',
+          '<td>' + v.type + '</td>',
+          '<td>' + v.fuel + '</td>',
+          '<td style="font-size:0.73rem;">' + v.inst + '</td>',
+          '<td>' + v.svc + '</td>',
+          '<td style="' + insCls + '">' + v.ins + '</td>',
+          '<td><span class="status-badge ' + v.status + '">' + v.sTxt + '</span></td>'
+        ].join('');
+        tb.appendChild(tr);
+      });
+    }
+    renderFleet();
+
+    function addVehicle() {
+      var btn = event.currentTarget;
+      btn.textContent = '✓ Registered!'; btn.style.background = '#1a7a3e';
+      setTimeout(function(){ btn.textContent = '+ Register Vehicle'; btn.style.background = ''; }, 2000);
+      var types = ['Ambulance','Staff Car','Van','Pickup Truck','Motorbike'];
+      var insts = ['District Hospital','Base Hospital B','MOH Office','Peripheral Unit','Teaching Hospital'];
+      fleet.unshift({ reg:'NB-DEMO', type: types[Math.floor(Math.random()*types.length)], fuel:'Diesel', inst: insts[Math.floor(Math.random()*insts.length)], svc:'Just now', ins:'Jun 2027', status:'s-running', sTxt:'Running' });
+      if (fleet.length > 8) fleet.pop();
+      var st = document.getElementById('s-total');
+      st.textContent = parseInt(st.textContent) + 1;
+      renderFleet();
+    }
+
+    /* Charts */
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var cur = new Date().getMonth();
+    var last8 = []; for (var i=7;i>=0;i--) last8.push(months[(cur-i+12)%12]);
+
+    new Chart(document.getElementById('chartFuel'), {
+      type:'bar',
+      data:{ labels:last8, datasets:[{ label:'Litres', data:[1820,2140,1650,2480,2210,2900,2550,3100], backgroundColor:'rgba(34,160,85,0.7)', borderColor:'rgba(34,160,85,1)', borderWidth:1, borderRadius:5 }] },
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ y:{beginAtZero:true,grid:{color:'rgba(0,0,0,0.06)'},ticks:{font:{size:10}}}, x:{grid:{display:false},ticks:{font:{size:10}}} } }
+    });
+
+    new Chart(document.getElementById('chartStatus'), {
+      type:'doughnut',
+      data:{ labels:['Running','Under Repair','Idle','Off Road'], datasets:[{ data:[34,5,2,1], backgroundColor:['#22a055','#c0392b','#d4730a','#5a6a7a'], borderWidth:2, borderColor:'#fff' }] },
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:12}}}, cutout:'60%' }
+    });
+
+    new Chart(document.getElementById('chartMaint'), {
+      type:'bar',
+      data:{ labels:last8, datasets:[{ label:'LKR', data:[42000,18000,65000,22000,38000,91000,44000,57000], backgroundColor:'rgba(14,158,138,0.7)', borderColor:'rgba(14,158,138,1)', borderWidth:1, borderRadius:5 }] },
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ y:{beginAtZero:true,grid:{color:'rgba(0,0,0,0.06)'},ticks:{font:{size:10}}}, x:{grid:{display:false},ticks:{font:{size:10}}} } }
+    });
+
+    new Chart(document.getElementById('chartCost'), {
+      type:'line',
+      data:{
+        labels:last8,
+        datasets:[
+          { label:'Fuel Cost', data:[182000,214000,165000,248000,221000,290000,255000,310000], borderColor:'#22a055', tension:0.4, pointBackgroundColor:'#22a055', borderWidth:2, fill:false },
+          { label:'Maint. Cost', data:[42000,18000,65000,22000,38000,91000,44000,57000], borderColor:'#d4730a', tension:0.4, pointBackgroundColor:'#d4730a', borderWidth:2, fill:false }
+        ]
+      },
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{font:{size:10}}}}, scales:{ y:{beginAtZero:true,grid:{color:'rgba(0,0,0,0.06)'},ticks:{font:{size:10}}}, x:{grid:{display:false},ticks:{font:{size:10}}} } }
+    });
+  </script>
+
+</body>
+</html>

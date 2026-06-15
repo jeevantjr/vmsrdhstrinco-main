@@ -1,0 +1,31 @@
+# ── Database credentials (NEVER commit) ──
+config/config.php
+config/mail.php
+
+# ── Uploaded files ──
+uploads/
+documents/
+
+# ── PHP dependencies ──
+vendor/
+
+# ── Composer lock (optional — include if you want reproducible builds) ──
+# composer.lock
+
+# ── OS & editor files ──
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# ── Error logs ──
+*.log
+error_log
+php_errorlog
+
+# ── Environment files ──
+.env
+.env.*
+!.env.example
